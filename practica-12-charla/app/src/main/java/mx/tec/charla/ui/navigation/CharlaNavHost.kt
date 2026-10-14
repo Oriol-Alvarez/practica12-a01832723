@@ -43,6 +43,7 @@ fun CharlaNavHost() {
             SalaScreen(
                 estado = estado,
                 onEnviar = viewModel::enviar,
+                onEnviarImagen = viewModel::enviarImagen,
                 onAprobar = viewModel::aprobar,
                 onRechazar = viewModel::rechazar,
                 onInvitar = viewModel::invitar,

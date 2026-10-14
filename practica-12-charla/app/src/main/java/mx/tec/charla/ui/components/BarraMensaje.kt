@@ -31,7 +31,9 @@ fun BarraMensaje(
     texto: String,
     onTexto: (String) -> Unit,
     onEnviar: () -> Unit,
+    onEnviarImagen: () -> Unit,
     habilitada: Boolean,
+    puedeEnviarImagen: Boolean = habilitada,
     modifier: Modifier = Modifier
 ) {
     val e = CharlaTema.espaciado
@@ -45,6 +47,9 @@ fun BarraMensaje(
             horizontalArrangement = Arrangement.spacedBy(e.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            FilledIconButton(onClick = onEnviarImagen, enabled = puedeEnviarImagen) {
+                Icon(painterResource(R.drawable.ic_imagen), contentDescription = "Enviar imagen")
+            }
             TextField(
                 value = texto,
                 onValueChange = onTexto,

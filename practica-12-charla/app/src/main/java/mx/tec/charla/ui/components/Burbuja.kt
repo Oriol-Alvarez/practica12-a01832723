@@ -1,5 +1,8 @@
 package mx.tec.charla.ui.components
 
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,8 +18,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import mx.tec.charla.domain.Mensaje
 import mx.tec.charla.ui.theme.CharlaTema
@@ -51,11 +58,40 @@ fun Burbuja(mensaje: Mensaje, mia: Boolean, conNombre: Boolean, modifier: Modifi
             if (!mia && conNombre) {
                 Text(mensaje.de, style = MaterialTheme.typography.labelMedium, color = c.primary)
             }
-            Text(
-                text = mensaje.texto,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (mia) c.onPrimary else c.onSurface
-            )
+            if (mensaje.texto.startsWith("data:image/")) {
+                val bitmap = remember(mensaje.texto) {
+                    try {
+                        val base64Data = mensaje.texto.substringAfter(",")
+                        val bytes = Base64.decode(base64Data, Base64.DEFAULT)
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap,
+                        contentDescription = "Imagen",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.FillWidth
+                    )
+                } else {
+                    Text(
+                        text = "📷 Imagen",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (mia) c.onPrimary else c.onSurface
+                    )
+                }
+            } else {
+                Text(
+                    text = mensaje.texto,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (mia) c.onPrimary else c.onSurface
+                )
+            }
             Text(
                 text = horaDe(mensaje.en),
                 style = MaterialTheme.typography.labelSmall,

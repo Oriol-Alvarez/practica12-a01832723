@@ -1,6 +1,10 @@
 package mx.tec.charla.ui.screens
 
 import android.app.Activity
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -70,6 +74,7 @@ import mx.tec.charla.ui.theme.CharlaTheme
 fun SalaScreen(
     estado: SalaUiState,
     onEnviar: (String) -> Boolean,
+    onEnviarImagen: (Uri) -> Unit,
     onAprobar: (Solicitud) -> Unit,
     onRechazar: (Solicitud) -> Unit,
     onInvitar: () -> Unit,
@@ -78,6 +83,9 @@ fun SalaScreen(
     onReiniciar: () -> Unit
 ) {
     var borrador by rememberSaveable { mutableStateOf("") }
+    val selectorImagen = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) onEnviarImagen(uri)
+    }
     val e = CharlaTema.espaciado
     IconosClarosEnLaBarraDeEstado()
     Scaffold(
@@ -87,6 +95,9 @@ fun SalaScreen(
                 texto = borrador,
                 onTexto = { borrador = it },
                 onEnviar = { if (onEnviar(borrador)) borrador = "" },
+                onEnviarImagen = {
+                    selectorImagen.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                },
                 habilitada = estado.puedeEscribir
             )
         }
@@ -261,7 +272,7 @@ private fun SalaPreview() {
                 ),
                 solicitudes = listOf(Solicitud("x", "eli"))
             ),
-            onEnviar = { true }, onAprobar = {}, onRechazar = {}, onInvitar = {},
+            onEnviar = { true }, onEnviarImagen = {}, onAprobar = {}, onRechazar = {}, onInvitar = {},
             onCerrarInvitacion = {}, onUnirme = {}, onReiniciar = {}
         )
     }

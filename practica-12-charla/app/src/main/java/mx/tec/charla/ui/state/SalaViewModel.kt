@@ -1,8 +1,15 @@
 package mx.tec.charla.ui.state
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.ByteArrayOutputStream
 import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +31,7 @@ import retrofit2.HttpException
 
 @HiltViewModel
 class SalaViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val store: SalaStore,
     private val conexion: ChatConexion,
     private val api: SalaApi
@@ -76,6 +84,37 @@ class SalaViewModel @Inject constructor(
 
     /** true si salió. El mensaje no se pinta aquí: se pinta cuando el servidor lo reparte, a todos igual. */
     fun enviar(texto: String): Boolean = texto.isNotBlank() && conexion.enviar(Orden.Enviar(texto.trim()))
+
+    fun enviarImagen(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val stream = context.contentResolver.openInputStream(uri) ?: return@launch
+                val original = BitmapFactory.decodeStream(stream)
+                stream.close()
+                if (original == null) return@launch
+
+                val maxLado = 800
+                val mayor = maxOf(original.width, original.height)
+                val bitmap = if (mayor > maxLado) {
+                    val escala = maxLado.toFloat() / mayor
+                    Bitmap.createScaledBitmap(
+                        original,
+                        (original.width * escala).toInt(),
+                        (original.height * escala).toInt(),
+                        true
+                    )
+                } else {
+                    original
+                }
+
+                val salida = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 75, salida)
+                val base64 = Base64.encodeToString(salida.toByteArray(), Base64.NO_WRAP)
+                enviar("data:image/jpeg;base64,$base64")
+            } catch (_: Exception) {
+            }
+        }
+    }
 
     fun aprobar(solicitud: Solicitud) = responder(solicitud, Orden.Aprobar(solicitud.id))
 

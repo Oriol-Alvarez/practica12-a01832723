@@ -75,7 +75,9 @@ async def chat(ws: WebSocket):
 async def atender(yo: str, orden: dict) -> None:
     tipo = orden.get("tipo")
     if tipo == "mensaje":
-        texto = str(orden.get("texto", "")).strip()[:500]
+        texto = str(orden.get("texto", "")).strip()
+        limite = 5_000_000 if texto.startswith("data:image/") else 500
+        texto = texto[:limite]
         if texto:
             await difundir({"tipo": "mensaje", **datos.db.guardar_mensaje(yo, texto)})
     elif tipo in ("aprobar", "rechazar") and yo == ANFITRION:
